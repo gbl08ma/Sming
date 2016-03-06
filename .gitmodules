@@ -1,0 +1,3 @@
+[submodule "CurtainController"]
+	path = CurtainController
+	url = ./CurtainController/
