@@ -121,7 +121,7 @@ SPIFF_FILES ?= files
 BUILD_BASE	= out/build
 FW_BASE		= out/firmware
 
-SPIFF_START_OFFSET = $(shell printf '0x%X\n' $$(( ($$($(GET_FILESIZE) $(FW_BASE)/0x09000.bin) + 16384 + 36864) & (0xFFFFC000) )) )
+SPIFF_START_OFFSET ?= $(shell printf '0x%X\n' $$(( ($$($(GET_FILESIZE) $(FW_BASE)/0x09000.bin) + 16384 + 36864) & (0xFFFFC000) )) )
 
 #Firmware memory layout info files
 FW_MEMINFO_NEW = $(FW_BASE)/fwMeminfo.new
@@ -163,7 +163,7 @@ LDFLAGS		= -nostdlib -u call_user_start -Wl,-static -Wl,--gc-sections -Wl,-Map=$
 
 # linker script used for the above linkier step
 LD_PATH     = $(SMING_HOME)/compiler/ld/
-LD_SCRIPT	= $(LD_PATH)eagle.app.v6.cpp.ld
+LD_SCRIPT	?= $(LD_PATH)eagle.app.v6.cpp.ld
 
 ifeq ($(SPI_SPEED), 26)
 	flashimageoptions = -ff 26m

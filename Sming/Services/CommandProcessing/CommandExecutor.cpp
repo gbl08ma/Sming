@@ -11,6 +11,7 @@
 CommandExecutor::CommandExecutor()
 {
 	commandHandler.registerSystemCommands();
+    commandBuf[0] = 0;
 }
 
 CommandExecutor::CommandExecutor(TcpClient* cmdClient) : CommandExecutor()

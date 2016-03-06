@@ -259,6 +259,7 @@ void TcpConnection::closeTcpConnection(tcp_pcb *tpcb)
 	tcp_accept(tpcb, NULL);
 
 	auto err = tcp_close(tpcb);
+    tcp_abort(tpcb); // Modified by gbl08ma, based on https://github.com/esp8266/Arduino/issues/230
 	if (err != ERR_OK)
 	{
 		debugf("tcp wait close connection");

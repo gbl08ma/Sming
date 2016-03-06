@@ -7,6 +7,7 @@
 
 #include "CommandHandler.h"
 #include "CommandDelegate.h"
+#include "SmingCore.h"
 
 CommandHandler::CommandHandler()
 {
@@ -130,16 +131,19 @@ void CommandHandler::procesHelpCommand(String commandLine, CommandOutput* comman
 void CommandHandler::procesStatusCommand(String commandLine, CommandOutput* commandOutput)
 {
 	debugf("StatusCommand entered");
-	char tempBuf[64];
-	commandOutput->printf("System information : ESP8266 Sming Framework\r\n");
-	commandOutput->printf("Sming Framework Version : 1.2.0\r\n");
-	commandOutput->printf("ESP SDK version : ");
+	commandOutput->printf("System information: ESP8266 Sming Framework with modifications by Segvault\r\n");
+	commandOutput->printf("Sming Framework Version: %s\r\n", SMING_VERSION);
+	commandOutput->printf("ESP SDK version: ");
 	commandOutput->print(system_get_sdk_version());
 	commandOutput->printf("\r\n");
-	commandOutput->printf("Time = ");
+	commandOutput->printf("Time: ");
 	commandOutput->printf(SystemClock.getSystemTimeString().c_str());
 	commandOutput->printf("\r\n");
-	commandOutput->printf("System Start Reason : %d\r\n", system_get_rst_info()->reason);
+	commandOutput->printf("System Start Reason: %d\r\n", system_get_rst_info()->reason);
+    commandOutput->printf("Free Heap: %d\r\n", system_get_free_heap_size());
+    commandOutput->printf("CPU Frequency: %d MHz\r\n", system_get_cpu_freq());
+    commandOutput->printf("System Chip ID: %x\r\n", system_get_chip_id());
+    commandOutput->printf("SPI Flash ID: %x\r\n", spi_flash_get_id());
 }
 
 void CommandHandler::procesEchoCommand(String commandLine, CommandOutput* commandOutput)
