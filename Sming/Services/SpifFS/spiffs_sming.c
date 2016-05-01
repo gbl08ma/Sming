@@ -23,12 +23,9 @@ static s32_t api_spiffs_write(u32_t addr, u32_t size, u8_t *src)
 
 static s32_t api_spiffs_erase(u32_t addr, u32_t size)
 {
-  debugf("api_spiffs_erase");
-  u32_t sect_first = flashmem_get_sector_of_address(addr);
-  u32_t sect_last = sect_first;
-  while( sect_first <= sect_last )
-    if( !flashmem_erase_sector( sect_first ++ ) )
-      return SPIFFS_ERR_INTERNAL;
+  debugf("api_spiffs_erase %u %u", addr, size);
+  if( !flashmem_erase_sector(flashmem_get_sector_of_address(addr)))
+    return SPIFFS_ERR_INTERNAL;
   return SPIFFS_OK;
 } 
 
@@ -109,18 +106,6 @@ static void spiffs_mount_internal(spiffs_config *cfg)
   cfg->hal_read_f = api_spiffs_read;
   cfg->hal_write_f = api_spiffs_write;
   cfg->hal_erase_f = api_spiffs_erase;
-  
-  uint32_t dat;
-  bool writeFirst = false;
-  flashmem_read(&dat, cfg->phys_addr, 4);
-  //debugf("%X", dat);
-
-  if (dat == UINT32_MAX)
-  {
-	  debugf("First init file system");
-	  spiffs_format_internal(cfg);
-	  writeFirst = true;
-  }
 
   int res = SPIFFS_mount(&_filesystemStorageHandle,
     cfg,
@@ -131,18 +116,6 @@ static void spiffs_mount_internal(spiffs_config *cfg)
     sizeof(spiffs_cache),
     NULL);
   debugf("mount res: %d\n", res);
-
-  if (writeFirst)
-  {
-	  file_t fd = SPIFFS_open(&_filesystemStorageHandle, "initialize_fs_header.dat", SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
-	  SPIFFS_write(&_filesystemStorageHandle, fd, (u8_t *)"1", 1);
-	  SPIFFS_fremove(&_filesystemStorageHandle, fd);
-	  SPIFFS_close(&_filesystemStorageHandle, fd);
-  }
-
-  //dat=0;
-  //flashmem_read(&dat, cfg.phys_addr, 4);
-  //debugf("%X", dat);
 }
 
 void spiffs_mount()
