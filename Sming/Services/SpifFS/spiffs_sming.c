@@ -23,7 +23,7 @@ static s32_t api_spiffs_write(u32_t addr, u32_t size, u8_t *src)
 
 static s32_t api_spiffs_erase(u32_t addr, u32_t size)
 {
-  debugf("api_spiffs_erase %u %u", addr, size);
+  debugf("api_spiffs_erase");
   if( !flashmem_erase_sector(flashmem_get_sector_of_address(addr)))
     return SPIFFS_ERR_INTERNAL;
   return SPIFFS_OK;
