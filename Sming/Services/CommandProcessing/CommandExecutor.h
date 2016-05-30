@@ -13,8 +13,6 @@
 #include "CommandHandler.h"
 #include "CommandOutput.h"
 
-#define MAX_COMMANDSIZE 64
-
 class CommandExecutor
 {
 public:
@@ -32,8 +30,7 @@ public:
 private :
 	CommandExecutor();
 	void processCommandLine(String cmdString);
-	char commandBuf [MAX_COMMANDSIZE+1];
-	uint16_t commandIndex = 0;
+	String commandBuf;
 	CommandOutput* commandOutput;
 };
 

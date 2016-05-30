@@ -11,7 +11,7 @@
 CommandExecutor::CommandExecutor()
 {
 	commandHandler.registerSystemCommands();
-    commandBuf[0] = 0;
+    commandBuf = "";
 }
 
 CommandExecutor::CommandExecutor(TcpClient* cmdClient) : CommandExecutor()
@@ -78,8 +78,7 @@ int CommandExecutor::executorReceive(char recvChar)
 {
 	if (recvChar == 27) // ESC -> delete current commandLine
 	{
-		commandIndex = 0;
-		commandBuf[commandIndex] = 0;
+		commandBuf = "";
 		if (commandHandler.getVerboseMode() == VERBOSE)
 		{
 			commandOutput->printf("\r\n%s",commandHandler.getCommandPrompt().c_str());
@@ -88,15 +87,14 @@ int CommandExecutor::executorReceive(char recvChar)
 	else if (recvChar == commandHandler.getCommandEOL())
 	{
 
-		processCommandLine(String(commandBuf));
-		commandIndex = 0;
+		processCommandLine(commandBuf);
+		commandBuf = "";
 	}
 	else
 	{
-		if ((commandIndex < MAX_COMMANDSIZE) && (isprint(recvChar)))
+		if (isprint(recvChar))
 		{
-			commandBuf[commandIndex++] = recvChar;
-			commandBuf[commandIndex] = 0;
+			commandBuf += String(recvChar);
 		}
 
 	}
