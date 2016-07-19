@@ -41,14 +41,12 @@ void DebugClass::setDebug(DebugPrintCharDelegate reqDelegate)
 {
 	debugOut.debugStream = nullptr;
 	debugOut.debugDelegate = reqDelegate;
-	printf("Welcome to DebugDelegate\r\n");
 }
 
 void DebugClass::setDebug(Stream &reqStream)
 {
 	debugOut.debugDelegate = nullptr;
 	debugOut.debugStream = &reqStream;
-	printf("Welcome to DebugStream");
 }
 
 void DebugClass::printPrefix()

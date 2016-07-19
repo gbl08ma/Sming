@@ -55,6 +55,8 @@ public:
 	__forceinline bool isProcessing()  { return TcpClient::isProcessing(); }
 	__forceinline TcpClientState getConnectionState() { return TcpClient::getConnectionState(); }
 
+	__forceinline void setTimeOut(uint16_t waitTimeOut) { TcpClient::setTimeOut(waitTimeOut); }
+
 	String getResponseHeader(String headerName, String defaultValue = "");
 	DateTime getLastModifiedDate(); // Last-Modified header
 	DateTime getServerDate(); // Date header
