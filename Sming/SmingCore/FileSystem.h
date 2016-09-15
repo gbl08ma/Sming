@@ -196,5 +196,11 @@ void fileDelete(file_t file);
  */
 bool fileExist(const String name);
 
+/** @brief  Check file system size and usage
+ *  @param  total pointer to integer to populate with total size
+ *  @param  used pointer to integer to populate with used size
+ */
+void filesystemUsage(u32_t *total, u32_t *used);
+
 /** @} */
 #endif /* _SMING_CORE_FILESYSTEM_H_ */

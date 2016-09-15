@@ -196,3 +196,8 @@ int fileGetContent(const String fileName, char* buffer, int bufSize)
 	fileClose(file);
 	return size;
 }
+
+void filesystemUsage(u32_t *total, u32_t *used)
+{
+	SPIFFS_info(&_filesystemStorageHandle, total, used);
+}
