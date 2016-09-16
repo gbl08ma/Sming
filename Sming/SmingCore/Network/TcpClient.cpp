@@ -48,7 +48,7 @@ TcpClient::~TcpClient()
 {
 	if (stream != NULL)
 	{
-		delete[] stream;
+		delete stream;
 		stream = NULL;
 	}
 }
