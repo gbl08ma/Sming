@@ -140,11 +140,13 @@ bool HttpResponse::sendFile(String fileName, bool allowGzipFileCheck /* = true*/
 		debugf("found %s", compressed.c_str());
 		stream = new FileStream(compressed);
 		setHeader("Content-Encoding", "gzip");
+		setHeader("Content-Length", String(fileGetSize(compressed)));
 	}
 	else if (fileExist(fileName))
 	{
 		debugf("found %s", fileName.c_str());
 		stream = new FileStream(fileName);
+		setHeader("Content-Length", String(fileGetSize(fileName)));
 	}
 	else
 	{
