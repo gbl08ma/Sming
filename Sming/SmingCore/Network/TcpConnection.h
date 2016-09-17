@@ -85,7 +85,7 @@ private:
     }
 
 protected:
-	tcp_pcb *tcp;
+	tcp_pcb *tcp = NULL;
 	uint16_t sleep;
 	uint16_t timeOut;
 	bool canSend;
