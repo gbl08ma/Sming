@@ -21,15 +21,17 @@ Sming - Open Source framework for high efficiency WiFi SoC ESP8266 native develo
 * MQTT protocol based on [libemqtt] (https://github.com/menudoproblema/libemqtt)
 * Networking based on LWIP stack
 * Simple and powerfull hardware API wrappers
-* Based on Espressif NONOS SDK 1.4.0 & 1.5.0
+* Based on Espressif NONOS SDK. Tested with versions 1.4 and 1.5. 
 
 ## Latest Release
-- [Sming V2.1.0](https://github.com/SmingHub/Sming/releases/tag/2.1.0)
+- [Sming V2.1.5](https://github.com/SmingHub/Sming/releases/tag/2.1.5)
 
 ## Getting started
 - [Windows](https://github.com/SmingHub/Sming/wiki/Windows-Quickstart)
 - [Linux](https://github.com/SmingHub/Sming/wiki/Linux-Quickstart)
 - [MacOS](https://github.com/SmingHub/Sming/wiki/MacOS-Quickstart)
+- [Docker](https://github.com/SmingHub/Sming/wiki/Docker-Quickstart)
+
 
 ## Additional needed software 
 - Spiffy  : Source included in Sming repository
@@ -149,3 +151,13 @@ void onFile(HttpRequest &request, HttpResponse &response)
   response.sendFile(file);
 }
 ```
+
+### Documentation
+A complete documentation can be created by running the command below. This requires `doxygen` to be installed on your system.
+
+```
+cd ${SMING_HOME}
+make docs
+```
+
+The newly generated documentation will be located under Sming/docs/publish
