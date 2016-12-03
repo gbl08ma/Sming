@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <stdint.h>
 typedef signed int s32_t;
 typedef unsigned int u32_t;
 typedef signed short s16_t;
