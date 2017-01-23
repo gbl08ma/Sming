@@ -98,16 +98,17 @@ public:
 	 *	@param	ssid WiFi SSID
 	 *	@param	password WiFi password
 	 *	@param	autoConnectOnStartup True to auto connect. False for manual. (Default: True)
+	 *	@param  save True to save the SSID and password in Flash. False otherwise. (Default: True)
 	 */
-	bool config(String ssid, String password, bool autoConnectOnStartup = true);
+	bool config(String ssid, String password, bool autoConnectOnStartup = true, bool save = true);
 
 	/**	@brief	Connect WiFi station to network
 	 */
-	void connect();
+	bool connect();
 
 	/**	@brief	Disconnect WiFi station from network
 	 */
-	void disconnect();
+	bool disconnect();
 
 	/**	@brief	Get WiFi station connectoin status
 	 *	@retval	bool True if connected.

@@ -20,6 +20,10 @@
 [submodule "Sming/third-party/spiffs"]
 	path = Sming/third-party/spiffs
 	url = https://github.com/pellepl/spiffs.git
-[submodule "Sming/third-party/rboot"]
-	path = Sming/third-party/rboot
-	url = https://github.com/raburton/rboot.git
+[submodule "Sming/third-party/umm_malloc"]
+	path = Sming/third-party/umm_malloc
+	url = https://github.com/rhempel/umm_malloc.git
+	ignore = dirty
+[submodule "Sming/third-party/esp-open-lwip"]
+	path = Sming/third-party/esp-open-lwip
+	url = https://github.com/pfalcon/esp-open-lwip.git

@@ -137,20 +137,43 @@ TARGET		= app
 
 THIRD_PARTY_DIR = $(SMING_HOME)/third-party
 
+SMING_FEATURES = none
 LIBSMING = sming
 ifeq ($(ENABLE_SSL),1)
 	LIBSMING = smingssl
+	SMING_FEATURES = SSL
 endif
 
 # which modules (subdirectories) of the project to include in compiling
 # define your custom directories in the project's own Makefile before including this one
 MODULES      ?= app     # default to app if not set by user
 EXTRA_INCDIR ?= include # default to include if not set by user
-EXTRA_INCDIR += $(SMING_HOME)/include $(SMING_HOME)/ $(SMING_HOME)/system/include $(SMING_HOME)/Wiring $(SMING_HOME)/Libraries $(SMING_HOME)/SmingCore $(SMING_HOME)/Services/SpifFS $(SDK_BASE)/../include $(THIRD_PARTY_DIR)/rboot $(THIRD_PARTY_DIR)/rboot/appcode $(THIRD_PARTY_DIR)/spiffs/src
+
+ifeq ($(ENABLE_CUSTOM_LWIP), 1)
+	LWIP_INCDIR = $(SMING_HOME)/third-party/esp-open-lwip	
+endif
+
+EXTRA_INCDIR += $(SMING_HOME)/include $(SMING_HOME)/ $(LWIP_INCDIR) $(SMING_HOME)/system/include $(SMING_HOME)/Wiring $(SMING_HOME)/Libraries $(SMING_HOME)/SmingCore $(SMING_HOME)/Services/SpifFS $(SDK_BASE)/../include $(THIRD_PARTY_DIR)/rboot $(THIRD_PARTY_DIR)/rboot/appcode $(THIRD_PARTY_DIR)/spiffs/src
+
+ENABLE_CUSTOM_HEAP ?= 0
+ 
+LIBMAIN = main
+ifeq ($(ENABLE_CUSTOM_HEAP),1)
+	LIBMAIN = mainmm
+endif
+
+LIBLWIP = lwip
+ifeq ($(ENABLE_CUSTOM_LWIP), 1)
+	LIBLWIP = lwip_open
+	ifeq ($(ENABLE_ESPCONN), 1)
+		LIBLWIP = lwip_full
+	endif
+	CUSTOM_TARGETS += $(USER_LIBDIR)/lib$(LIBLWIP).a 
+endif
 
 # libraries used in this project, mainly provided by the SDK
 USER_LIBDIR = $(SMING_HOME)/compiler/lib/
-LIBS		= microc microgcc hal phy pp net80211 lwip wpa main $(LIBSMING) crypto pwm smartconfig $(EXTRA_LIBS)
+LIBS		= microc microgcc hal phy pp net80211 $(LIBLWIP) wpa $(LIBMAIN) $(LIBSMING) crypto pwm smartconfig $(EXTRA_LIBS)
 
 # compiler flags using during compilation of source files
 CFLAGS		= -Wpointer-arith -Wundef -Werror -Wl,-EL -nostdlib -mlongcalls -mtext-section-literals -finline-functions -fdata-sections -ffunction-sections -D__ets__ -DICACHE_FLASH -DARDUINO=106 -DCOM_SPEED_SERIAL=$(COM_SPEED_SERIAL) $(USER_CFLAGS)
@@ -178,7 +201,7 @@ ifeq ($(ENABLE_SSL),1)
 		AXTLS_FLAGS += -DSSL_DEBUG=1 -DDEBUG_TLS_MEM=1
 	endif
 	
-	CUSTOM_TARGETS += $(USER_LIBDIR)/lib$(LIBSMING).a include/ssl/private_key.h
+	CUSTOM_TARGETS += include/ssl/private_key.h
 	CFLAGS += $(AXTLS_FLAGS)  
 	CXXFLAGS += $(AXTLS_FLAGS)	
 endif
@@ -306,7 +329,7 @@ endef
 
 .PHONY: all checkdirs spiff_update spiff_clean clean
 
-all: checkdirs $(TARGET_OUT) $(SPIFF_BIN_OUT) $(FW_FILE_1) $(FW_FILE_2)
+all: $(USER_LIBDIR)/lib$(LIBSMING).a checkdirs $(TARGET_OUT) $(SPIFF_BIN_OUT) $(FW_FILE_1) $(FW_FILE_2)
 
 spiff_update: spiff_clean $(SPIFF_BIN_OUT)
 
@@ -345,7 +368,7 @@ $(APP_AR): $(OBJ)
 	$(Q) $(AR) cru $@ $^
 	
 $(USER_LIBDIR)/lib$(LIBSMING).a:
-	$(vecho) "Recompiling Sming with SSL support. This may take some time"
+	$(vecho) "(Re)compiling Sming. Enabled features: $(SMING_FEATURES). This may take some time"
 	$(Q) $(MAKE) -C $(SMING_HOME) clean V=$(V) ENABLE_SSL=$(ENABLE_SSL) SMING_HOME=$(SMING_HOME)
 	$(Q) $(MAKE) -C $(SMING_HOME) V=$(V) ENABLE_SSL=$(ENABLE_SSL) SMING_HOME=$(SMING_HOME)
 
@@ -357,6 +380,11 @@ include/ssl/private_key.h:
 ifeq ($(ENABLE_CUSTOM_PWM), 1)
 $(USER_LIBDIR)/libpwm.a:
 	$(Q) $(MAKE) -C $(SMING_HOME) compiler/lib/libpwm.a ENABLE_CUSTOM_PWM=1
+endif
+
+ifeq ($(ENABLE_CUSTOM_LWIP), 1)
+$(USER_LIBDIR)/liblwip_%.a:
+	$(Q) $(MAKE) -C $(SMING_HOME) compiler/lib/liblwip_%.a ENABLE_CUSTOM_LWIP=1 ENABLE_ESPCONN=$(ENABLE_ESPCONN)
 endif
 
 checkdirs: $(BUILD_DIR) $(FW_BASE) $(CUSTOM_TARGETS)
