@@ -82,8 +82,11 @@ bool TcpConnection::connect(String server, int port, boolean useSsl /* = false *
 
 bool TcpConnection::connect(IPAddress addr, uint16_t port, boolean useSsl /* = false */, uint32_t sslOptions /* = 0 */)
 {
-#ifdef ENABLE_SSL
+	if (tcp == NULL)
+		initialize(tcp_new());
+
 	this->useSsl = useSsl;
+#ifdef ENABLE_SSL
 	this->sslOptions |= sslOptions;
 #endif
 
