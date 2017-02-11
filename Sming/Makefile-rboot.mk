@@ -35,6 +35,8 @@ RBOOT_LD_1 ?= rom1.ld
 ESPTOOL2 ?= esptool2
 # path to spiffy
 SPIFFY ?= $(SMING_HOME)/spiffy/spiffy
+INIT_BIN_ADDR  = 0x7c000
+BLANK_BIN_ADDR = 0x4b000
 # filenames and options for generating rBoot rom images with esptool2
 RBOOT_E2_SECTS     ?= .text .data .rodata
 RBOOT_E2_USER_ARGS ?= -quiet -bin -boot2
@@ -164,6 +166,7 @@ MODULES      ?= app     # default to app if not set by user
 MODULES      += $(THIRD_PARTY_DIR)/rboot/appcode
 EXTRA_INCDIR ?= include # default to include if not set by user
 
+ENABLE_CUSTOM_LWIP ?= 1
 ifeq ($(ENABLE_CUSTOM_LWIP), 1)
 	LWIP_INCDIR = $(SMING_HOME)/third-party/esp-open-lwip	
 endif
@@ -292,12 +295,18 @@ ifeq ($(SPI_SIZE), 256K)
 else ifeq ($(SPI_SIZE), 1M)
 	flashimageoptions += -fs 8m
 	SPIFF_SIZE ?= 524288  #512K
+	INIT_BIN_ADDR  = 0x0fc000
+	BLANK_BIN_ADDR = 0x0fe000
 else ifeq ($(SPI_SIZE), 2M)
 	flashimageoptions += -fs 16m
 	SPIFF_SIZE ?= 524288  #512K
+	INIT_BIN_ADDR  = 0x1fc000
+	BLANK_BIN_ADDR = 0x1fe000
 else ifeq ($(SPI_SIZE), 4M)
 	flashimageoptions += -fs 32m
 	SPIFF_SIZE ?= 524288  #512K
+	INIT_BIN_ADDR  = 0x3fc000
+	BLANK_BIN_ADDR = 0x3fe000
 else
 	flashimageoptions += -fs 4m
 	SPIFF_SIZE ?= 196608  #192K
@@ -505,7 +514,8 @@ terminal:
 
 flashinit:
 	$(vecho) "Flash init data default and blank data."
-	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) 0x7c000 $(SDK_BASE)/bin/esp_init_data_default.bin 0x7e000 $(SDK_BASE)/bin/blank.bin 0x4B000 $(SMING_HOME)/compiler/data/blankfs.bin
+	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) erase_flash
+	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) $(INIT_BIN_ADDR) $(SDK_BASE)/bin/esp_init_data_default.bin $(BLANK_BIN_ADDR) $(SDK_BASE)/bin/blank.bin $(SPIFF_START_OFFSET) $(SMING_HOME)/compiler/data/blankfs.bin
 
 rebuild: clean all
 
