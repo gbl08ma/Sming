@@ -45,8 +45,8 @@ uint8_t TwoWire::transmitting = 0;
 void (*TwoWire::user_onRequest)(void);
 void (*TwoWire::user_onReceive)(int);
 
-static int default_sda_pin = SDA;
-static int default_scl_pin = SCL;
+static int default_sda_pin = 2;
+static int default_scl_pin = 0;
 
 // Constructors ////////////////////////////////////////////////////////////////
 
@@ -54,20 +54,20 @@ TwoWire::TwoWire(){}
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-void TwoWire::begin(int sda, int scl){
+void TwoWire::begin(int scl, int sda){
   default_sda_pin = sda;
   default_scl_pin = scl;
   twi_init(sda, scl);
   flush();
 }
 
-void TwoWire::pins(int sda, int scl){
+void TwoWire::pins(int scl, int sda){
   default_sda_pin = sda;
   default_scl_pin = scl;
 }
 
 void TwoWire::begin(void){
-  begin(default_sda_pin, default_scl_pin);
+  begin(default_scl_pin, default_sda_pin);
 }
 
 void TwoWire::begin(uint8_t address){
@@ -111,13 +111,13 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity){
   return requestFrom(address, static_cast<size_t>(quantity), true);
 }
 
-/*uint8_t TwoWire::requestFrom(int address, int quantity){
+uint8_t TwoWire::requestFrom(int address, int quantity){
   return requestFrom(static_cast<uint8_t>(address), static_cast<size_t>(quantity), true);
 }
 
 uint8_t TwoWire::requestFrom(int address, int quantity, int sendStop){
   return requestFrom(static_cast<uint8_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
-}*/
+}
 
 void TwoWire::beginTransmission(uint8_t address){
   transmitting = 1;
@@ -170,13 +170,6 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity){
 
 int TwoWire::available(void){
   int result = rxBufferLength - rxBufferIndex;
-
-  if (!result) {
-    // yielding here will not make more data "available",
-    // but it will prevent the system from going into WDT reset
-    //optimistic_yield(1000);
-  }
-
   return result;
 }
 
@@ -251,4 +244,6 @@ void TwoWire::onRequest( void (*function)(void) ){
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
-TwoWire Wire = TwoWire();
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_TWOWIRE)
+TwoWire Wire;
+#endif

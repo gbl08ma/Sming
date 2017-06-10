@@ -132,12 +132,12 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 
 void onFile(HttpRequest &request, HttpResponse &response)
 {
-	String file = request.getPath();
+	String file = request.uri.Path;
 	if (file[0] == '/')
 		file = file.substring(1);
 
 	if (file[0] == '.')
-		response.forbidden();
+		response.code = HTTP_STATUS_FORBIDDEN;
 	else
 	{
 		response.setCache(86400, true); // It's important to use cache for better performance.
@@ -149,7 +149,7 @@ void onCamSetup(HttpRequest &request, HttpResponse &response) {
 
 	String size, type;
 
-	if (request.getRequestMethod() == RequestMethod::POST)
+	if (request.method == HTTP_POST)
 	{
 		type = request.getPostParameter("type");
 		debugf("set type %s", type.c_str());
@@ -224,7 +224,7 @@ void onStream(HttpRequest &request, HttpResponse &response) {
 }
 
 void onFavicon(HttpRequest &request, HttpResponse &response) {
-	response.notFound();
+	response.code = HTTP_STATUS_NOT_FOUND;
 }
 
 
@@ -256,10 +256,9 @@ void StartServers()
 }
 
 
-// Will be called when WiFi station was connected to AP
-void connectOk()
+// Will be called when station is fully operational
+void gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway)
 {
-	Serial.println("I'm CONNECTED");
 	StartServers();
 }
 
@@ -280,8 +279,7 @@ void init()
 	WifiStation.config(WIFI_SSID, WIFI_PWD);
 	WifiAccessPoint.enable(false);
 
-	// Run our method when station was connected to AP
-	WifiStation.waitConnection(connectOk);
+	WifiEvents.onStationGotIP(gotIP);
 
 	// setup the ArduCAM
 	initCam();

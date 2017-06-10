@@ -219,5 +219,4 @@ void CommandHandler::processCommandOptions(String commandLine  ,CommandOutput* c
 	}
 }
 
-
 CommandHandler commandHandler;

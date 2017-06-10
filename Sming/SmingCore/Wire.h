@@ -27,8 +27,6 @@
 #include <inttypes.h>
 #include "Stream.h"
 
-#define SDA 2
-#define SCL 0
 #define BUFFER_LENGTH 32
 
 class TwoWire : public Stream
@@ -50,8 +48,8 @@ class TwoWire : public Stream
     static void onReceiveService(uint8_t*, int);
   public:
     TwoWire();
-    void begin(int sda, int scl);
-    void pins(int sda, int scl) __attribute__((deprecated)); // use begin(sda, scl) in new code
+    void begin(int scl, int sda);
+    void pins(int scl, int sda);
     void begin();
     void begin(uint8_t);
     void begin(int);
@@ -66,8 +64,8 @@ class TwoWire : public Stream
 
     uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);
-    /*uint8_t requestFrom(int, int);
-    uint8_t requestFrom(int, int, int);*/
+    uint8_t requestFrom(int, int);
+    uint8_t requestFrom(int, int, int);
     
     virtual size_t write(uint8_t);
     virtual size_t write(const uint8_t *, size_t);
@@ -85,7 +83,9 @@ class TwoWire : public Stream
     using Print::write;
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_TWOWIRE)
 extern TwoWire Wire;
+#endif
 
 #endif
 

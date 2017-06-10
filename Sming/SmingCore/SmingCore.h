@@ -8,7 +8,7 @@
 #ifndef _NET_WIRING_
 #define _NET_WIRING_
 
-#define SMING_VERSION "3.1.0" // Major Minor Sub
+#define SMING_VERSION "3.2.0" // Major Minor Sub
 
 #include "../Wiring/WiringFrameworkIncludes.h"
 
@@ -40,14 +40,13 @@
 #include "Network/MqttClient.h"
 #include "Network/NtpClient.h"
 #include "Network/HttpServer.h"
-#include "Network/HttpRequest.h"
-#include "Network/HttpResponse.h"
+#include "Network/Http/HttpRequest.h"
+#include "Network/Http/HttpResponse.h"
 #include "Network/FTPServer.h"
 #include "Network/NetUtils.h"
 #include "Network/TcpClient.h"
 #include "Network/TcpConnection.h"
 #include "Network/UdpConnection.h"
-#include "Network/HttpFirmwareUpdate.h"
 #include "Network/rBootHttpUpdate.h"
 #include "Network/URL.h"
 

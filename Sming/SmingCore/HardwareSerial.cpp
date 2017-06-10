@@ -120,7 +120,7 @@ int HardwareSerial::read()
 int HardwareSerial::readMemoryBlock(char* buf, int max_len)
 {
 	if (uart !=0 && uart_rx_enabled(uart)) {
-		int size;
+		int size = 0;
 		char c;
 		for(int i=0;i<max_len; i++) {
 			c = read();
@@ -128,6 +128,7 @@ int HardwareSerial::readMemoryBlock(char* buf, int max_len)
 				break;
 			}
 
+			size++;
 			// @TODO: Check this section...
 			buf[i] = c;
 		}
@@ -184,7 +185,11 @@ void HardwareSerial::callbackHandler(uart_t *uart) {
 		lastPos = uart->rx_buffer->size;
 	}
 	uint8_t receivedChar = uart->rx_buffer->buffer[lastPos-1];
-	if ((memberData[uart->uart_nr].HWSDelegate) || (memberData[uart->uart_nr].commandExecutor)) {
+	if ((memberData[uart->uart_nr].HWSDelegate)
+#if ENABLE_CMD_EXECUTOR
+			|| (memberData[uart->uart_nr].commandExecutor)
+#endif
+	   ) {
 		uint32 serialQueueParameter;
 		uint16 cc = uart_rx_available(uart);
 		serialQueueParameter = (cc * 256) + receivedChar; // can be done by bitlogic, avoid casting to ETSParam
@@ -193,9 +198,11 @@ void HardwareSerial::callbackHandler(uart_t *uart) {
 		if (memberData[uart->uart_nr].HWSDelegate) {
 			system_os_post(USER_TASK_PRIO_0, SERIAL_SIGNAL_DELEGATE, serialQueueParameter);
 		}
+#if ENABLE_CMD_EXECUTOR
 		if (memberData[uart->uart_nr].commandExecutor) {
 			system_os_post(USER_TASK_PRIO_0, SERIAL_SIGNAL_COMMAND, serialQueueParameter);
 		}
+#endif
 	}
 }
 
@@ -227,6 +234,7 @@ void HardwareSerial::resetCallback()
 
 void HardwareSerial::commandProcessing(bool reqEnable)
 {
+#if ENABLE_CMD_EXECUTOR
 	if (reqEnable)
 	{
 		if (!memberData[uartNr].commandExecutor)
@@ -239,6 +247,7 @@ void HardwareSerial::commandProcessing(bool reqEnable)
 		delete memberData[uartNr].commandExecutor;
 		memberData[uartNr].commandExecutor = nullptr;
 	}
+#endif
 }
 
 void HardwareSerial::delegateTask (os_event_t *inputEvent)
@@ -258,10 +267,11 @@ void HardwareSerial::delegateTask (os_event_t *inputEvent)
 			break;
 
 		case SERIAL_SIGNAL_COMMAND:
-
+#if ENABLE_CMD_EXECUTOR
 			if (memberData[uartNr].commandExecutor) {
 				memberData[uartNr].commandExecutor->executorReceive(rcvChar);
 			}
+#endif
 			break;
 
 		default:

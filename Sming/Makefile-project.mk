@@ -18,11 +18,8 @@ COM_SPEED_ESPTOOL ?= $(COM_SPEED)
 # Default COM port speed (used in code)
 COM_SPEED_SERIAL  ?= $(COM_SPEED)
 
-#default debug print format is not to show filename and line for every debug line
-DEBUG_PRINT_FILENAME_AND_LINE ?= 0
-
-#Defaut debug verbose level is INFO, where DEBUG=3 INFO=2 WARNING=1 ERROR=0 
-DEBUG_VERBOSE_LEVEL ?= 2
+# Disable CommandExecutor functionality if not used and save some ROM and RAM.
+ENABLE_CMD_EXECUTOR ?= 1
 
 ## Flash parameters
 # SPI_SPEED = 40, 26, 20, 80
@@ -32,13 +29,20 @@ SPI_MODE ?= qio
 # SPI_SIZE: 512K, 256K, 1M, 2M, 4M
 SPI_SIZE ?= 512K
 
+### Debug output parameters
+# By default `debugf` does not print file name and line number. If you want this enabled set the directive below to 1
+DEBUG_PRINT_FILENAME_AND_LINE ?= 0
+
+# Defaut debug verbose level is INFO, where DEBUG=3 INFO=2 WARNING=1 ERROR=0 
+DEBUG_VERBOSE_LEVEL ?= 2
+
 # Path to spiffy
 SPIFFY ?= $(SMING_HOME)/spiffy/spiffy
 
 #ESPTOOL2 config to generate rBootLESS images
 IMAGE_MAIN	?= 0x00000.bin
 IMAGE_SDK	?= 0x0a000.bin # The name must match the starting address of the irom0 section 
-						   # in the LD file ($SMING_HOME/compiler/ld/eagle.app.v6.cpp.ld).
+						   # in the LD file ($SMING_HOME/compiler/ld/standalone.rom.ld).
 						   # To calculate the value do the following: x = irom0_0_seg.org - 0x40200000
 						   # Example: 0x4020a000 - 0x40200000 = 0x0a000
 INIT_BIN_ADDR =  0x7c000
@@ -168,12 +172,14 @@ EXTRA_INCDIR ?= include # default to include if not set by user
 
 ENABLE_CUSTOM_LWIP ?= 1
 ifeq ($(ENABLE_CUSTOM_LWIP), 1)
-	LWIP_INCDIR = $(SMING_HOME)/third-party/esp-open-lwip	
+	LWIP_INCDIR = $(SMING_HOME)/third-party/esp-open-lwip/include	
 endif
 
 EXTRA_INCDIR += $(SMING_HOME)/include $(SMING_HOME)/ $(LWIP_INCDIR) $(SMING_HOME)/system/include $(SMING_HOME)/Wiring $(SMING_HOME)/Libraries $(SMING_HOME)/SmingCore $(SMING_HOME)/Services/SpifFS $(SDK_BASE)/../include $(THIRD_PARTY_DIR)/rboot $(THIRD_PARTY_DIR)/rboot/appcode $(THIRD_PARTY_DIR)/spiffs/src
 
 ENABLE_CUSTOM_HEAP ?= 0
+ 
+USER_LIBDIR = $(SMING_HOME)/compiler/lib/
  
 LIBMAIN = main
 ifeq ($(ENABLE_CUSTOM_HEAP),1)
@@ -190,17 +196,17 @@ ifeq ($(ENABLE_CUSTOM_LWIP), 1)
 endif
 
 LIBPWM = pwm
+# WARNING: In the next versions ENABLE_CUSTOM_PWM will be set to 1 by default
 ifeq ($(ENABLE_CUSTOM_PWM), 1)
 	LIBPWM = pwm_open
 	CUSTOM_TARGETS += $(USER_LIBDIR)/lib$(LIBPWM).a
 endif
 
 # libraries used in this project, mainly provided by the SDK
-USER_LIBDIR = $(SMING_HOME)/compiler/lib/
 LIBS		= microc microgcc hal phy pp net80211 $(LIBLWIP) wpa $(LIBMAIN) $(LIBSMING) crypto $(LIBPWM) smartconfig $(EXTRA_LIBS)
 
 # compiler flags using during compilation of source files
-CFLAGS		= -Wpointer-arith -Wundef -Werror -Wl,-EL -nostdlib -mlongcalls -mtext-section-literals -finline-functions -fdata-sections -ffunction-sections -D__ets__ -DICACHE_FLASH -DARDUINO=106 -DCOM_SPEED_SERIAL=$(COM_SPEED_SERIAL) $(USER_CFLAGS) -DCUST_FILE_BASE=$$(subst /,_,$(subst .,_,$$*))
+CFLAGS		= -Wpointer-arith -Wundef -Werror -Wl,-EL -nostdlib -mlongcalls -mtext-section-literals -finline-functions -fdata-sections -ffunction-sections -D__ets__ -DICACHE_FLASH -DARDUINO=106 -DCOM_SPEED_SERIAL=$(COM_SPEED_SERIAL) $(USER_CFLAGS) -DENABLE_CMD_EXECUTOR=$(ENABLE_CMD_EXECUTOR)
 ifeq ($(SMING_RELEASE),1)
 	# See: https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
 	#      for full list of optimization options
@@ -216,7 +222,7 @@ else
 endif
 
 #Append debug options
-CFLAGS += -DDEBUG_VERBOSE_LEVEL=$(DEBUG_VERBOSE_LEVEL) -DDEBUG_PRINT_FILENAME_AND_LINE=$(DEBUG_PRINT_FILENAME_AND_LINE)
+CFLAGS += -DCUST_FILE_BASE=$$* -DDEBUG_VERBOSE_LEVEL=$(DEBUG_VERBOSE_LEVEL) -DDEBUG_PRINT_FILENAME_AND_LINE=$(DEBUG_PRINT_FILENAME_AND_LINE)
 
 CXXFLAGS	= $(CFLAGS) -fno-rtti -fno-exceptions -std=c++11 -felide-constructors
 
@@ -251,8 +257,8 @@ endif
 LDFLAGS		= -nostdlib -u call_user_start -Wl,-static -Wl,--gc-sections -Wl,-Map=$(FW_BASE)/firmware.map -Wl,-wrap,system_restart_local 
 
 # linker script used for the above linkier step
-LD_PATH     = $(SMING_HOME)/compiler/ld/
-LD_SCRIPT	= $(LD_PATH)eagle.app.v6.cpp.ld
+LD_PATH     = $(SMING_HOME)/compiler/ld
+LD_SCRIPT	= standalone.rom.ld
 
 ifeq ($(SPI_SPEED), 26)
 	flashimageoptions = -ff 26m
@@ -328,7 +334,6 @@ TARGET_OUT	:= $(addprefix $(BUILD_BASE)/,$(TARGET).out)
 
 SPIFF_BIN_OUT ?= spiff_rom
 SPIFF_BIN_OUT := $(FW_BASE)/$(SPIFF_BIN_OUT).bin
-LD_SCRIPT	:= $(addprefix -T,$(LD_SCRIPT))
 
 INCDIR	:= $(addprefix -I,$(SRC_DIR))
 EXTRA_INCDIR	:= $(addprefix -I,$(EXTRA_INCDIR))
@@ -363,7 +368,7 @@ spiff_update: spiff_clean $(SPIFF_BIN_OUT)
 
 $(TARGET_OUT): $(APP_AR)
 	$(vecho) "LD $@"	
-	$(Q) $(LD) -L$(USER_LIBDIR) -L$(SDK_LIBDIR) $(LD_SCRIPT) $(LDFLAGS) -Wl,--start-group $(LIBS) $(APP_AR) -Wl,--end-group -o $@
+	$(Q) $(LD) -L$(USER_LIBDIR) -L$(SDK_LIBDIR) -L$(LD_PATH) -T$(LD_SCRIPT) $(LDFLAGS) -Wl,--start-group $(LIBS) $(APP_AR) -Wl,--end-group -o $@
 
 	$(Q) $(STRIP) $@
 
@@ -378,7 +383,7 @@ $(TARGET_OUT): $(APP_AR)
 	$(Q) $(MEMANALYZER) $@ > $(FW_MEMINFO_NEW)
 	
 	$(Q) if [ -f "$(FW_MEMINFO_NEW)" -a -f "$(FW_MEMINFO_OLD)" ]; then \
-	  awk -F "|" 'FILENAME == "$(FW_MEMINFO_OLD)" { arr[$$1]=$$5 } FILENAME == "$(FW_MEMINFO_NEW)" { if (arr[$$1] != $$5){printf "%s%s%+d%s", substr($$0, 1, length($$0) - 1)," (",$$5 - arr[$$1],")\n" } else {print $$0} }' $(FW_MEMINFO_OLD) $(FW_MEMINFO_NEW); \
+	  awk -F "|" 'FILENAME == "$(FW_MEMINFO_OLD)" { arr[$$1]=$$5 } FILENAME == "$(FW_MEMINFO_NEW)" { if (arr[$$1] != $$5){printf "%s (%+d)\n", $$0,$$5 - arr[$$1] } else {printf "%s\n", $$0} }' $(FW_MEMINFO_OLD) $(FW_MEMINFO_NEW); \
 	elif [ -f "$(FW_MEMINFO_NEW)" ]; then \
 	  cat $(FW_MEMINFO_NEW); \
 	fi
@@ -386,8 +391,8 @@ $(TARGET_OUT): $(APP_AR)
 	$(vecho) "------------------------------------------------------------------------------"
 	$(vecho) "# Generating image..."
 #	$(Q) $(ESPTOOL2) elf2image $@ $(flashimageoptions) -o $(FW_BASE)/
-	@$(ESPTOOL2) $(ESPTOOL2_MAIN_ARGS) $@ $(FW_BASE)/$(IMAGE_MAIN) $(ESPTOOL2_SECTS)
-	@$(ESPTOOL2) $(ESPTOOL2_SDK_ARGS) $@ $(FW_BASE)/$(IMAGE_SDK)
+	$(Q) $(ESPTOOL2) $(ESPTOOL2_MAIN_ARGS) $@ $(FW_BASE)/$(IMAGE_MAIN) $(ESPTOOL2_SECTS)
+	$(Q) $(ESPTOOL2) $(ESPTOOL2_SDK_ARGS) $@ $(FW_BASE)/$(IMAGE_SDK)
 	$(vecho) "Generate firmware images successully in folder $(FW_BASE)."
 	$(vecho) "Done"
 
