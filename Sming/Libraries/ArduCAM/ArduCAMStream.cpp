@@ -38,7 +38,7 @@ ArduCAMStream::~ArduCAMStream() {
 }
 
 
-size_t ArduCAMStream::available() {
+int ArduCAMStream::available() {
 //	int len = myCAM.read_fifo_length();
 //	ACAM_DEBUG("Stream available (%d bytes)\n", len);
 	return len;
@@ -78,6 +78,9 @@ bool ArduCAMStream::isFinished() {
 
 
 uint16_t ArduCAMStream::readMemoryBlock(char* data, int bufSize) {
+	if(!dataReady()) {
+		return 0;
+	}
 
 	if (!transfer) {
 		transfer = true;
